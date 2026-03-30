@@ -42,7 +42,7 @@ results.head()
 | R Package | Status | Python Function |
 |-----------|--------|----------------|
 | DESeq2 | ✅ Ready | `rb.deseq2()` |
-| edgeR | 📋 Planned | `rb.edger()` |
+| edgeR | ✅ Ready | `rb.edger()` |
 | limma | 📋 Planned | `rb.limma_voom()` |
 | Seurat | 📋 Planned | `rb.seurat()` |
 | clusterProfiler | 📋 Planned | `rb.enrichment()` |
