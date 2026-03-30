@@ -45,7 +45,7 @@ results.head()
 | edgeR | ✅ Ready | `rb.edger()` |
 | limma | ✅ Ready | `rb.limma_voom()` |
 | Seurat | 📋 Planned | `rb.seurat()` |
-| clusterProfiler | 📋 Planned | `rb.enrichment()` |
+| clusterProfiler | ✅ Ready | `rb.enrichment()` |
 | phyloseq | 📋 Planned | `rb.phyloseq()` |
 
 ## How It Works
