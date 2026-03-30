@@ -5,5 +5,6 @@ from .wrappers.deseq2 import deseq2
 from .wrappers.edger import edger
 from .wrappers.limma import limma_voom
 from .wrappers.clusterprofiler import enrichment
+from .wrappers.phyloseq import phyloseq, phyloseq_richness
 
-__all__ = ["deseq2", "edger", "limma_voom", "enrichment", "RDataError", "RFormulaError", "RPackageMissing"]
+__all__ = ["deseq2", "edger", "limma_voom", "enrichment", "phyloseq", "phyloseq_richness", "RDataError", "RFormulaError", "RPackageMissing"]
