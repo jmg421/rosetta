@@ -3,5 +3,6 @@
 from ._errors import RDataError, RFormulaError, RPackageMissing
 from .wrappers.deseq2 import deseq2
 from .wrappers.edger import edger
+from .wrappers.limma import limma_voom
 
-__all__ = ["deseq2", "edger", "RDataError", "RFormulaError", "RPackageMissing"]
+__all__ = ["deseq2", "edger", "limma_voom", "RDataError", "RFormulaError", "RPackageMissing"]

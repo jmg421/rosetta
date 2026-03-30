@@ -43,7 +43,7 @@ results.head()
 |-----------|--------|----------------|
 | DESeq2 | ✅ Ready | `rb.deseq2()` |
 | edgeR | ✅ Ready | `rb.edger()` |
-| limma | 📋 Planned | `rb.limma_voom()` |
+| limma | ✅ Ready | `rb.limma_voom()` |
 | Seurat | 📋 Planned | `rb.seurat()` |
 | clusterProfiler | 📋 Planned | `rb.enrichment()` |
 | phyloseq | 📋 Planned | `rb.phyloseq()` |
