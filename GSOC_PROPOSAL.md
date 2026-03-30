@@ -26,35 +26,46 @@ None of these provide a unified, maintained Python interface across multiple Bio
 
 ## Details of your coding project
 
-The contributor will build the following over 350 hours:
+The core v0.1 infrastructure and basic wrappers already exist (bridge layer, type conversion, 6 working wrappers with 33 tests). The contributor will deepen and harden the library over 350 hours:
 
-### Core infrastructure (Weeks 1–3)
+### Deepen wrappers with publication-critical parameters (Weeks 1–4)
 
-- **`rosetta/_bridge.py`** — R session management (lazy init) and bidirectional type conversion: pandas DataFrame ↔ R data.frame, numpy ndarray ↔ R matrix, Python dict ↔ R named list, None ↔ NULL
-- **`rosetta/_deps.py`** — R package detection and automatic installation via `BiocManager::install()` with user confirmation
-- **`rosetta/_errors.py`** — Exception classes translating R errors to Python: `RPackageMissing`, `RFormulaError`, `RDataError`
+- **DESeq2**: Add `lfcShrink()` support (apeglm/ashr/normal), contrast specification via `results(contrast=...)`, `resultsNames()`, independent filtering control, LFC thresholds
+- **edgeR**: Add contrast matrix support, TREAT threshold testing, quasi-likelihood vs likelihood ratio choice
+- **limma-voom**: Add `contrast.matrix`, `treat()`, `decideTests()` support
+- **clusterProfiler**: Add GSEA (not just ORA), KEGG/Reactome pathway support, custom gene sets
+- **Seurat**: Add `FindMarkers()`, `SCTransform` normalization, integration workflows; refactor to builder/pipeline pattern for multi-step analyses
+- **phyloseq**: Add ordination methods, differential abundance, filtering/transformation
 
-### Wrappers (Weeks 4–8)
+### Three-tier API architecture (Weeks 5–6)
 
-- **`rosetta.deseq2()`** — Full DESeq2 pipeline (DESeqDataSetFromMatrix → DESeq → results) in one call
-- **`rosetta.edger()`** — edgeR quasi-likelihood pipeline (DGEList → calcNormFactors → estimateDisp → glmQLFit → glmQLFTest)
-- **`rosetta.limma_voom()`** — limma-voom pipeline (voom → lmFit → eBayes → topTable)
+- **Tier 1**: Quick defaults (current single-call API for 80% of use cases)
+- **Tier 2**: Granular kwargs exposing R parameters directly (shrinkage type, contrasts, filtering)
+- **Tier 3**: R escape hatch — expose the underlying rpy2 objects for advanced users
 
-Each wrapper: validates inputs, calls `ensure_installed()`, converts types, runs the R pipeline, returns a pandas DataFrame.
+### Subprocess+Rscript fallback (Weeks 7–8)
+
+- Implement alternative backend using `subprocess` + `Rscript` + JSON serialization as fallback when rpy2 installation fails
+- Automatic backend detection and switching
+- Strict version pinning for rpy2 with defensive error handling
 
 ### Testing and documentation (Weeks 9–10)
 
-- pytest suite with mocked rpy2 for CI environments without R, plus integration tests against real R for environments with R installed
+- Expand pytest suite to cover all new parameters with both mocked and real R integration tests
+- Validate wrapper output matches direct R output for published datasets (e.g. airway for DESeq2)
 - Docstrings with usage examples for all public functions
 - Vignette-style tutorial notebook comparing rosetta output to equivalent R code
 
-### Functions
+### Functions (expanded)
 
-| Function | R Package | Input | Output |
-|----------|-----------|-------|--------|
-| `rb.deseq2()` | DESeq2 | counts df, metadata df, design formula | results DataFrame (baseMean, log2FC, pvalue, padj) |
-| `rb.edger()` | edgeR | counts df, metadata df, design formula | results DataFrame (logFC, logCPM, F, PValue, FDR) |
-| `rb.limma_voom()` | limma | counts df, metadata df, design formula | results DataFrame (logFC, AveExpr, t, P.Value, adj.P.Val) |
+| Function | R Package | Key Parameters Added |
+|----------|-----------|---------------------|
+| `rb.deseq2()` | DESeq2 | contrast, shrinkage, lfc_threshold, alpha |
+| `rb.edger()` | edgeR | contrast, test_type, treat_lfc |
+| `rb.limma_voom()` | limma | contrast, treat_lfc, decide_tests |
+| `rb.enrichment()` | clusterProfiler | method (ORA/GSEA), database (GO/KEGG/Reactome) |
+| `rb.seurat()` | Seurat | Builder pattern, FindMarkers, SCTransform |
+| `rb.phyloseq()` | phyloseq | ordination, differential abundance |
 
 ## Expected impact
 
@@ -72,7 +83,7 @@ The package will be published on PyPI and maintained by Nodes Bio.
 Contributors, please contact mentors below after completing at least one of the tests below.
 
 - EVALUATING MENTOR: John Muirhead-Gould <john@nodes.bio> is the founder of Nodes Bio, Inc., which builds AI-powered biological network visualization tools. Experience with rpy2, Cytoscape.js, and bioinformatics pipelines.
-- CO-MENTOR: [TBD — seeking co-mentor with R package development and/or prior GSoC experience]
+- CO-MENTOR: Matias Salibian-Barrera <matias@stat.ubc.ca> is a Professor of Statistics at the University of British Columbia. Expert R programmer, co-author of the RobStatTM package, and prior GSoC co-supervisor.
 
 ## Tests
 
