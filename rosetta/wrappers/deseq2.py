@@ -5,7 +5,7 @@ import rpy2.robjects as ro
 from rpy2.robjects.conversion import localconverter
 from rpy2.robjects.packages import importr
 
-from .._bridge import _converter, to_r_dataframe, to_r_matrix, to_pandas
+from .._bridge import _converter, to_r_dataframe, to_r_matrix, to_pandas, to_r_df
 from .._deps import ensure_installed
 from .._errors import RDataError, RFormulaError
 
@@ -17,26 +17,24 @@ def deseq2(counts: pd.DataFrame, metadata: pd.DataFrame, design: str = "~ condit
         counts: Gene count matrix (genes x samples) with non-negative integers.
         metadata: Sample metadata DataFrame with row names matching counts columns.
         design: R formula string for the experimental design.
-        **kwargs: Additional arguments passed to DESeq().
+        **kwargs: Additional arguments passed to DESeq2::DESeq().
 
     Returns:
         DataFrame with baseMean, log2FoldChange, lfcSE, stat, pvalue, padj.
     """
-    # Validate inputs before touching R
     if (counts < 0).any().any():
         raise RDataError("Count matrix contains negative values")
     if not set(counts.columns).issubset(set(metadata.index)):
         raise RDataError("Count matrix columns must match metadata row names")
 
-    # Validate formula
+    stats_pkg = importr("stats")
     with localconverter(_converter):
         try:
-            ro.r["as.formula"](design)
+            stats_pkg.as_formula(design)
         except Exception as e:
             raise RFormulaError(f"Invalid design formula '{design}': {e}") from e
 
     ensure_installed("DESeq2")
-
     deseq2_pkg = importr("DESeq2")
 
     r_counts = to_r_matrix(counts)
@@ -49,6 +47,5 @@ def deseq2(counts: pd.DataFrame, metadata: pd.DataFrame, design: str = "~ condit
         )
         dds = deseq2_pkg.DESeq(dds, **kwargs)
         res = deseq2_pkg.results(dds)
-        r_df = ro.r["as.data.frame"](res)
 
-    return to_pandas(r_df)
+    return to_pandas(to_r_df(res))

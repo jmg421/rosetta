@@ -5,7 +5,7 @@ import rpy2.robjects as ro
 from rpy2.robjects.conversion import localconverter
 from rpy2.robjects.packages import importr
 
-from .._bridge import _converter, to_r_matrix, to_r_dataframe, to_pandas
+from .._bridge import _converter, to_r_matrix, to_r_dataframe, to_pandas, r_nrow
 from .._deps import ensure_installed
 from .._errors import RDataError, RFormulaError
 
@@ -17,7 +17,7 @@ def limma_voom(counts: pd.DataFrame, metadata: pd.DataFrame, design: str = "~ co
         counts: Gene count matrix (genes x samples) with non-negative integers.
         metadata: Sample metadata DataFrame with row names matching counts columns.
         design: R formula string for the experimental design.
-        **kwargs: Additional arguments passed to lmFit().
+        **kwargs: Additional arguments passed to limma::lmFit().
 
     Returns:
         DataFrame with logFC, AveExpr, t, P.Value, adj.P.Val, B.
@@ -27,9 +27,10 @@ def limma_voom(counts: pd.DataFrame, metadata: pd.DataFrame, design: str = "~ co
     if not set(counts.columns).issubset(set(metadata.index)):
         raise RDataError("Count matrix columns must match metadata row names")
 
+    stats_pkg = importr("stats")
     with localconverter(_converter):
         try:
-            ro.r["as.formula"](design)
+            stats_pkg.as_formula(design)
         except Exception as e:
             raise RFormulaError(f"Invalid design formula '{design}': {e}") from e
 
@@ -38,7 +39,6 @@ def limma_voom(counts: pd.DataFrame, metadata: pd.DataFrame, design: str = "~ co
 
     limma_pkg = importr("limma")
     edger_pkg = importr("edgeR")
-    stats_pkg = importr("stats")
 
     r_counts = to_r_matrix(counts)
     r_metadata = to_r_dataframe(metadata)
@@ -50,6 +50,6 @@ def limma_voom(counts: pd.DataFrame, metadata: pd.DataFrame, design: str = "~ co
         v = limma_pkg.voom(dge, r_design_matrix)
         fit = limma_pkg.lmFit(v, r_design_matrix, **kwargs)
         fit = limma_pkg.eBayes(fit)
-        r_df = limma_pkg.topTable(fit, number=ro.r["nrow"](r_counts))
+        r_df = limma_pkg.topTable(fit, number=r_nrow(r_counts))
 
     return to_pandas(r_df)

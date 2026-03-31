@@ -1,18 +1,21 @@
 # 🪨 rosetta
 
-**Seamless Python wrappers for popular R bioinformatics packages.**
+**Python interface to R bioinformatics packages — pandas in, pandas out.**
 
-Stop copy-pasting between R and Python. `rosetta` lets you call DESeq2, edgeR, limma, and other essential R bioinformatics tools directly from Python with pandas DataFrames in, pandas DataFrames out.
+`rosetta` handles the rpy2 boilerplate, type conversion, and R dependency management so you can call DESeq2, edgeR, limma, and other Bioconductor tools from Python without writing any R.
 
-## Why?
+## What it does
 
-Bioinformaticians live in two worlds. Your upstream pipeline is Python (preprocessing, ML, visualization), but the gold-standard differential expression tools are in R. The current options:
+- Converts pandas DataFrames to R data.frames/matrices and back automatically
+- Manages R package detection and provides clear errors when packages are missing
+- Uses namespaced R calls (`DESeq2::DESeq()`, not global environment lookups) for safety
+- Validates inputs on the Python side before crossing the R boundary
 
-- **Switch to RStudio mid-analysis** — breaks your workflow
-- **rpy2** — powerful but verbose, requires manual R-to-Python type conversion
-- **Rewrite in Python** — PyDESeq2 exists but coverage is sparse
+## What it doesn't do
 
-`rosetta` wraps the real R packages (not reimplementations) with a clean Python API. You get the exact same statistical methods, just callable from Python.
+- Reimplement any statistics — all computation happens in the original R packages
+- Eliminate rpy2 — it's the bridge layer, with all its known fragility
+- Expose every parameter — v0.1 covers default pipelines; granular options (shrinkage, contrasts) are in progress
 
 ## Quick Start
 
@@ -23,14 +26,13 @@ pip install rosetta
 ```python
 import rosetta as rb
 
-# DESeq2 differential expression — one function call
+# DESeq2 differential expression
 results = rb.deseq2(
     counts=counts_df,        # pandas DataFrame (genes × samples)
     metadata=metadata_df,    # pandas DataFrame with conditions
     design="~ condition"
 )
 
-# Results come back as a pandas DataFrame
 results.head()
 #          baseMean  log2FoldChange  lfcSE    pvalue      padj
 # GeneA     1523.4           2.31   0.41  3.2e-08   1.1e-06
@@ -48,15 +50,6 @@ results.head()
 | clusterProfiler | ✅ Ready | `rb.enrichment()` |
 | phyloseq | ✅ Ready | `rb.phyloseq()` |
 
-## How It Works
-
-`rosetta` uses `rpy2` under the hood but handles all the ugly parts:
-
-1. **Automatic type conversion** — pandas DataFrames ↔ R data.frames, numpy arrays ↔ R matrices
-2. **R dependency management** — installs required R packages automatically via Bioconductor
-3. **Clean error messages** — translates cryptic R errors into Python exceptions
-4. **No R syntax required** — every parameter is a Python keyword argument
-
 ## Requirements
 
 - Python 3.9+
@@ -64,12 +57,6 @@ results.head()
 - rpy2
 
 ## Contributing
-
-This project is early stage. The highest-impact contributions:
-
-1. **Wrappers for new packages** — pick one from the Planned list and submit a PR
-2. **Real-world testing** — try it on your actual data and report what breaks
-3. **Documentation** — usage examples from real analyses
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
@@ -79,4 +66,4 @@ MIT
 
 ## Acknowledgments
 
-Built on top of [rpy2](https://rpy2.github.io/) and the incredible R/Bioconductor ecosystem. This project wraps — not replaces — the original R packages. All credit for the statistical methods goes to their respective authors.
+Built on [rpy2](https://rpy2.github.io/) and the R/Bioconductor ecosystem. All credit for the statistical methods goes to the original R package authors.

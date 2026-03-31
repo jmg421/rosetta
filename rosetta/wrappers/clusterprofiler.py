@@ -7,7 +7,7 @@ import rpy2.robjects as ro
 from rpy2.robjects.conversion import localconverter
 from rpy2.robjects.packages import importr
 
-from .._bridge import _converter, to_pandas
+from .._bridge import _converter, to_pandas, to_r_df
 from .._deps import ensure_installed
 from .._errors import RDataError
 
@@ -20,7 +20,7 @@ def enrichment(
     key_type: str = "SYMBOL",
     **kwargs,
 ) -> pd.DataFrame:
-    """Run GO enrichment analysis via clusterProfiler.
+    """Run GO enrichment analysis via clusterProfiler::enrichGO.
 
     Args:
         gene_list: List of gene identifiers.
@@ -28,7 +28,7 @@ def enrichment(
         ont: GO ontology — "BP", "MF", or "CC".
         pvalue_cutoff: Adjusted p-value cutoff.
         key_type: Type of gene identifier (SYMBOL, ENTREZID, ENSEMBL, etc.).
-        **kwargs: Additional arguments passed to enrichGO().
+        **kwargs: Additional arguments passed to clusterProfiler::enrichGO().
 
     Returns:
         DataFrame with enrichment results (ID, Description, pvalue, p.adjust, etc.).
@@ -51,6 +51,5 @@ def enrichment(
             keyType=key_type,
             **kwargs,
         )
-        r_df = ro.r["as.data.frame"](result)
 
-    return to_pandas(r_df)
+    return to_pandas(to_r_df(result))

@@ -5,7 +5,7 @@ import rpy2.robjects as ro
 from rpy2.robjects.conversion import localconverter
 from rpy2.robjects.packages import importr
 
-from .._bridge import _converter, to_r_matrix, to_r_dataframe, to_pandas
+from .._bridge import _converter, to_r_matrix, to_r_dataframe, to_pandas, to_r_df, r_nrow
 from .._deps import ensure_installed
 from .._errors import RDataError, RFormulaError
 
@@ -17,7 +17,7 @@ def edger(counts: pd.DataFrame, metadata: pd.DataFrame, design: str = "~ conditi
         counts: Gene count matrix (genes x samples) with non-negative integers.
         metadata: Sample metadata DataFrame with row names matching counts columns.
         design: R formula string for the experimental design.
-        **kwargs: Additional arguments passed to glmQLFit().
+        **kwargs: Additional arguments passed to edgeR::glmQLFit().
 
     Returns:
         DataFrame with logFC, logCPM, F, PValue, FDR.
@@ -27,16 +27,15 @@ def edger(counts: pd.DataFrame, metadata: pd.DataFrame, design: str = "~ conditi
     if not set(counts.columns).issubset(set(metadata.index)):
         raise RDataError("Count matrix columns must match metadata row names")
 
+    stats_pkg = importr("stats")
     with localconverter(_converter):
         try:
-            ro.r["as.formula"](design)
+            stats_pkg.as_formula(design)
         except Exception as e:
             raise RFormulaError(f"Invalid design formula '{design}': {e}") from e
 
     ensure_installed("edgeR")
-
     edger_pkg = importr("edgeR")
-    stats_pkg = importr("stats")
 
     r_counts = to_r_matrix(counts)
     r_metadata = to_r_dataframe(metadata)
@@ -48,7 +47,6 @@ def edger(counts: pd.DataFrame, metadata: pd.DataFrame, design: str = "~ conditi
         dge = edger_pkg.estimateDisp(dge, r_design_matrix)
         fit = edger_pkg.glmQLFit(dge, r_design_matrix, **kwargs)
         res = edger_pkg.glmQLFTest(fit)
-        top = edger_pkg.topTags(res, n=ro.r["nrow"](r_counts))
-        r_df = ro.r["as.data.frame"](top)
+        top = edger_pkg.topTags(res, n=r_nrow(r_counts))
 
-    return to_pandas(r_df)
+    return to_pandas(to_r_df(top))
